@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Thomas Akehurst
+ * Copyright (C) 2021-2022 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -234,6 +234,34 @@ public class WebhooksAcceptanceTest {
     assertThat(request.header("X-Single").firstValue(), is("3"));
     assertThat(request.header("X-Multi").values(), hasItems("6", "param-one-value"));
     assertThat(request.getBodyAsString(), is("Tom"));
+  }
+
+  @Test
+  public void appliesTemplatingResponseBodyViaDSL() throws Exception {
+    rule.stubFor(
+        post(urlPathEqualTo("/templating"))
+            .willReturn(ok().withBody("{\"id\": \"this_is_an_id\"}"))
+            .withPostServeAction(
+                "webhook",
+                webhook()
+                    .withMethod("{{jsonPath originalRequest.body '$.method'}}")
+                    .withUrl(
+                        targetServer.baseUrl()
+                            + "{{{jsonPath originalRequest.body '$.callbackPath'}}}")
+                    .withBody("{{jsonPath responseBody '$.id'}}")));
+
+    verify(0, postRequestedFor(anyUrl()));
+
+    client.postJson(
+        "/templating",
+        "{\n" + "  \"callbackPath\": \"/callback/123\",\n" + "  \"method\": \"POST\"\n" + "}");
+
+    waitForRequestToTargetServer();
+
+    LoggedRequest request =
+        targetServer.findAll(postRequestedFor(urlEqualTo("/callback/123"))).get(0);
+
+    assertThat(request.getBodyAsString(), is("this_is_an_id"));
   }
 
   @Test

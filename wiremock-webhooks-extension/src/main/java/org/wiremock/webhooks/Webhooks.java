@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Thomas Akehurst
+ * Copyright (C) 2021-2022 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import com.github.tomakehurst.wiremock.core.Admin;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.PostServeAction;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.RequestTemplateModel;
+import com.github.tomakehurst.wiremock.extension.responsetemplating.LoggedResponseTemplateModel;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.TemplateEngine;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
@@ -149,6 +150,7 @@ public class Webhooks extends PostServeAction {
             ? webhookDefinition.getExtraParameters()
             : Collections.<String, Object>emptyMap());
     model.put("originalRequest", RequestTemplateModel.from(serveEvent.getRequest()));
+    model.put("response", LoggedResponseTemplateModel.from(serveEvent.getResponse()));
 
     WebhookDefinition renderedWebhookDefinition =
         webhookDefinition
