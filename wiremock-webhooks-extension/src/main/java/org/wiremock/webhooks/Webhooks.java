@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Thomas Akehurst
+ * Copyright (C) 2021-2022 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,6 +149,7 @@ public class Webhooks extends PostServeAction {
             ? webhookDefinition.getExtraParameters()
             : Collections.<String, Object>emptyMap());
     model.put("originalRequest", RequestTemplateModel.from(serveEvent.getRequest()));
+    model.put("responseBody", serveEvent.getResponse().getBodyAsString());
 
     WebhookDefinition renderedWebhookDefinition =
         webhookDefinition
