@@ -66,7 +66,7 @@ public class Webhooks extends PostServeAction {
     this.httpClient = httpClient;
     this.transformers = transformers;
     this.afterTemplatingTransformers = afterTemplatingTransformers;
-    this.templateEngine = new TemplateEngine(Collections.emptyMap(), null, Collections.emptySet());
+    this.templateEngine = new TemplateEngine(Collections.emptyMap(), null, Collections.singleton("WEBHOOKS.*"));
   }
 
   @JsonCreator
