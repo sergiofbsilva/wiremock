@@ -202,11 +202,12 @@ allprojects {
   }
 
   version = '2.35.0'
-
+  
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+ 
   compileJava {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-    options.encoding = 'UTF-8'
+   options.encoding = 'UTF-8'
 
     // silences warnings about compiling against `sun` packages
     options.compilerArgs += '-XDenableSunApiLintControl'

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.wiremock.webhooks.Webhooks;
+import testsupport.BodyByteCountHeaderTransformer;
 import testsupport.TestNotifier;
 import testsupport.ThrowingWebhookTransformer;
 import testsupport.WireMockTestClient;

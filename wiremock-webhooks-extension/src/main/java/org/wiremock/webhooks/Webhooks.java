@@ -25,13 +25,14 @@ import com.github.tomakehurst.wiremock.core.Admin;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.PostServeAction;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.RequestTemplateModel;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.LoggedResponseTemplateModel;
+import org.wiremock.webhooks.ext.LoggedResponseTemplateModel;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.TemplateEngine;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -44,32 +45,41 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
+import org.wiremock.webhooks.ext.BodySignatureCustomHeaderTransformer;
 
 public class Webhooks extends PostServeAction {
 
   private final ScheduledExecutorService scheduler;
   private final CloseableHttpClient httpClient;
+
   private final List<WebhookTransformer> transformers;
+
+  private final List<WebhookTransformer> afterTemplatingTransformers;
   private final TemplateEngine templateEngine;
 
   private Webhooks(
       ScheduledExecutorService scheduler,
       CloseableHttpClient httpClient,
-      List<WebhookTransformer> transformers) {
+      List<WebhookTransformer> transformers,
+      List<WebhookTransformer> afterTemplatingTransformers) {
     this.scheduler = scheduler;
     this.httpClient = httpClient;
     this.transformers = transformers;
-
+    this.afterTemplatingTransformers = afterTemplatingTransformers;
     this.templateEngine = new TemplateEngine(Collections.emptyMap(), null, Collections.emptySet());
   }
 
   @JsonCreator
   public Webhooks() {
-    this(Executors.newScheduledThreadPool(10), createHttpClient(), new ArrayList<>());
+    this(Executors.newScheduledThreadPool(10), createHttpClient(), new ArrayList<>(), Collections.singletonList(new BodySignatureCustomHeaderTransformer()));
   }
 
   public Webhooks(WebhookTransformer... transformers) {
-    this(Executors.newScheduledThreadPool(10), createHttpClient(), Arrays.asList(transformers));
+    this(Executors.newScheduledThreadPool(10), createHttpClient(), Arrays.asList(transformers), Collections.emptyList());
+  }
+
+  public Webhooks(List<WebhookTransformer> transformers, List<WebhookTransformer> afterTemplatingTransformers) {
+    this(Executors.newScheduledThreadPool(10), createHttpClient(), transformers, afterTemplatingTransformers);
   }
 
   private static CloseableHttpClient createHttpClient() {
@@ -109,7 +119,13 @@ public class Webhooks extends PostServeAction {
       for (WebhookTransformer transformer : transformers) {
         definition = transformer.transform(serveEvent, definition);
       }
+
       definition = applyTemplating(definition, serveEvent);
+
+      for (WebhookTransformer transformer : afterTemplatingTransformers) {
+        definition = transformer.transform(serveEvent, definition);
+      }
+
       request = buildRequest(definition);
     } catch (Exception e) {
       notifier().error("Exception thrown while configuring webhook", e);

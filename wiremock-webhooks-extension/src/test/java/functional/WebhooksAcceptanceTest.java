@@ -248,7 +248,7 @@ public class WebhooksAcceptanceTest {
                     .withUrl(
                         targetServer.baseUrl()
                             + "{{{jsonPath originalRequest.body '$.callbackPath'}}}")
-                    .withBody("{{jsonPath responseBody '$.id'}}")));
+                    .withBody("{{jsonPath response.body '$.id'}}")));
 
     verify(0, postRequestedFor(anyUrl()));
 

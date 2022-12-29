@@ -1,4 +1,4 @@
-package com.github.tomakehurst.wiremock.extension.responsetemplating;
+package org.wiremock.webhooks.ext;
 
 import com.github.tomakehurst.wiremock.common.ListOrSingle;
 import com.github.tomakehurst.wiremock.http.LoggedResponse;
